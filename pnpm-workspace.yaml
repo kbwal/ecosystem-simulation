@@ -1,0 +1,7 @@
+packages:
+  - "backend"
+  - "site"
+
+ignoredBuiltDependencies:
+  - sharp
+  - unrs-resolver
