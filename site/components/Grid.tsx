@@ -21,48 +21,7 @@ export default function Grid({ cellSize = 3 }) {
 
     const fetchAnimalsQuery = trpc.getAllAnimals.useQuery();
     const dbAnimals = fetchAnimalsQuery.data;
-    const animals: Animal[] = [];
-    console.log("animals: ", animals);
-
-    // const cells = useRef(
-    //     Array.from({ length: GRID }, () =>
-    //         Array.from({ length: GRID }, () => {
-    //             let rand = Math.random();
-    //             if (rand < 0.01) {
-    //                 return {
-    //                     animal: {
-    //                         ...animals[Math.floor(Math.random() * animals.length)],
-    //                         energy: Math.floor(Math.random() * 100),
-    //                     },
-    //                     food: {
-    //                         value: Math.random(),
-    //                     },
-    //                 };
-    //             } else if (rand < 0.1) {
-    //                 return {
-    //                     animal: {
-    //                         ...animals[Math.floor(Math.random() * animals.length)],
-    //                         energy: Math.floor(Math.random() * 100),
-    //                     },
-    //                     food: null,
-    //                 };
-    //             } else if (rand < 0.2) {
-    //                 return {
-    //                     animal: null,
-    //                     food: {
-    //                         value: Math.random(),
-    //                     },
-    //                 };
-    //             } else {
-    //                 return {
-    //                     animal: null,
-    //                     food: null,
-    //                 };
-    //             }
-    //         }),
-    //     ),
-    // );
-
+    const baseSpeciesRef = useRef<Animal[]>([]);
     const cells = useRef<ReturnType<typeof initCells> | null>(null);
 
     function initCells(loadedAnimals: Animal[]) {
@@ -96,14 +55,15 @@ export default function Grid({ cellSize = 3 }) {
 
     useEffect(() => {
         if (!dbAnimals) return;
+        baseSpeciesRef.current = [];
         for (const currentAnimal of dbAnimals) {
             const jsRawScript = ts.transpileModule(currentAnimal.script, {
                 compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.None },
             }).outputText;
             const fn = new Function(`return (${jsRawScript})`)();
-            animals.push({ ...currentAnimal, energy: 0, age: 0, script: { tick: fn } });
+            baseSpeciesRef.current.push({ ...currentAnimal, energy: 0, age: 0, script: { tick: fn } });
         }
-        cells.current = initCells(animals);
+        cells.current = initCells(baseSpeciesRef.current);
     }, [dbAnimals]);
 
     const layerRef = useRef<Konva.Layer>(null);
@@ -112,7 +72,7 @@ export default function Grid({ cellSize = 3 }) {
         let lastTime = 0;
         const MS_PER_TICK = 1000;
         let numTicks = 0;
-        const sleepingAnimals = new Map<object, number>();
+        const sleepingAnimals = new WeakMap<object, number>();
 
         const tick = (timestamp: number) => {
             if (!cells.current) {
@@ -313,41 +273,29 @@ export default function Grid({ cellSize = 3 }) {
                             } else if (reproduce) {
                                 const newAnimal: Animal = {
                                     ...animal,
-                                    energy: 0,
+                                    energy: Math.floor(Math.random() * 100),
                                     age: 0,
                                     maxAge: (Math.random() - 0.5) * 3 + animal.maxAge,
                                 };
-                                animals.push(newAnimal);
+
                                 if (contains(i - 1, j) && !cells.current[i - 1][j].animal) {
                                     cells.current[i - 1][j] = {
-                                        animal: {
-                                            ...newAnimal,
-                                            energy: Math.floor(Math.random() * 100),
-                                        },
+                                        animal: newAnimal,
                                         food: cells.current[i - 1][j].food,
                                     };
                                 } else if (contains(i + 1, j) && !cells.current[i + 1][j].animal) {
                                     cells.current[i + 1][j] = {
-                                        animal: {
-                                            ...newAnimal,
-                                            energy: Math.floor(Math.random() * 100),
-                                        },
+                                        animal: newAnimal,
                                         food: cells.current[i + 1][j].food,
                                     };
                                 } else if (contains(i, j - 1) && !cells.current[i][j - 1].animal) {
                                     cells.current[i][j - 1] = {
-                                        animal: {
-                                            ...newAnimal,
-                                            energy: Math.floor(Math.random() * 100),
-                                        },
+                                        animal: newAnimal,
                                         food: cells.current[i][j - 1].food,
                                     };
                                 } else if (contains(i, j + 1) && !cells.current[i][j + 1].animal) {
                                     cells.current[i][j + 1] = {
-                                        animal: {
-                                            ...newAnimal,
-                                            energy: Math.floor(Math.random() * 100),
-                                        },
+                                        animal: newAnimal,
                                         food: cells.current[i][j + 1].food,
                                     };
                                 }
