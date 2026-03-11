@@ -1,6 +1,7 @@
 {
     "compilerOptions": {
         "outDir": "./dist",
+        "rootDir": "./src",
         "module": "commonjs",
         "target": "es2017",
         "moduleResolution": "node",
@@ -8,5 +9,5 @@
         "strict": true,
         "skipLibCheck": true
     },
-    "include": ["src/**/*", "drizzle.config.ts"]
+    "include": ["src/**/*"]
 }
