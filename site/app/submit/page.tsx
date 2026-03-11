@@ -49,7 +49,7 @@ export default function Submit() {
     }
 
     return (
-        <div className="flex min-h-screen items-center justify-center p-7 bg-zinc-50 font-sans dark:bg-black">
+        <div className="flex min-h-screen items-center justify-center p-7 bg-black font-sans">
             <FieldSet className="w-full max-w-xl">
                 <FieldGroup>
                     <Field>
