@@ -97,7 +97,7 @@ export default function Grid({ cellSize = 3 }) {
                             const nearbyFood: { distance: number; direction: "r" | "l" | "u" | "d"; value: number }[] = [];
                             const nearbyAnimals: { distance: number; direction: "r" | "l" | "u" | "d" }[] = [];
                             for (let delta = -3; delta < 4; delta++) {
-                                if (contains(i + delta, j)) {
+                                if (contains(i + delta, j) && delta != 0) {
                                     const currentFood = cells.current[i + delta][j].food;
                                     const currentAnimal = cells.current[i + delta][j].animal;
                                     if (currentFood != null) {
@@ -116,7 +116,7 @@ export default function Grid({ cellSize = 3 }) {
                                 }
                             }
                             for (let delta = -3; delta < 4; delta++) {
-                                if (contains(i, j + delta)) {
+                                if (contains(i, j + delta) && delta != 0) {
                                     const currentFood = cells.current[i][j + delta].food;
                                     const currentAnimal = cells.current[i][j + delta].animal;
                                     if (currentFood != null) {
@@ -141,6 +141,12 @@ export default function Grid({ cellSize = 3 }) {
                                 nearbyFood: nearbyFood,
                                 nearbyAnimals: nearbyAnimals,
                             });
+
+                            if (!action) {
+                                animal.energy -= METABOLISM_COST;
+                                continue;
+                            }
+
                             const direction = action.move;
                             const eat = action.eat;
                             const reproduce = action.reproduce;
