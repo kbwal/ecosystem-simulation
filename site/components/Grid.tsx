@@ -102,14 +102,14 @@ export default function Grid({ cellSize = 3 }) {
                                     const currentAnimal = cells.current[i + delta][j].animal;
                                     if (currentFood != null) {
                                         nearbyFood.push({
-                                            distance: delta,
+                                            distance: Math.abs(delta),
                                             direction: delta < 0 ? "u" : "d",
                                             value: currentFood.value,
                                         });
                                     }
                                     if (currentAnimal != null) {
                                         nearbyAnimals.push({
-                                            distance: delta,
+                                            distance: Math.abs(delta),
                                             direction: delta < 0 ? "u" : "d",
                                         });
                                     }
@@ -121,14 +121,14 @@ export default function Grid({ cellSize = 3 }) {
                                     const currentAnimal = cells.current[i][j + delta].animal;
                                     if (currentFood != null) {
                                         nearbyFood.push({
-                                            distance: delta,
+                                            distance: Math.abs(delta),
                                             direction: delta < 0 ? "l" : "r",
                                             value: currentFood.value,
                                         });
                                     }
                                     if (currentAnimal != null) {
                                         nearbyAnimals.push({
-                                            distance: delta,
+                                            distance: Math.abs(delta),
                                             direction: delta < 0 ? "l" : "r",
                                         });
                                     }
