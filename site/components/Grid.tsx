@@ -1,13 +1,17 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { RefObject, useEffect, useRef, useState } from "react";
 import { Stage, Layer, Shape } from "react-konva";
 import Konva from "konva";
 import { Animal } from "@/types/animalTypes";
 import { trpc } from "@/utils/trpc";
 import ts from "typescript";
+import { KonvaEventObject } from "konva/lib/Node";
+import AnimalInfo from "./AnimalInfo";
 
 export default function Grid({ cellSize = 3 }) {
-    const GRID = 250;
+    const [hoveredCell, setHoveredCell] = useState<Animal | null>(null);
+
+    const GRID = 50;
     const canvasSize = GRID * cellSize;
 
     const MOVEMENT_COST = 2;
@@ -17,6 +21,22 @@ export default function Grid({ cellSize = 3 }) {
 
     function contains(i: number, j: number) {
         return i <= GRID - 1 && i >= 0 && j <= GRID - 1 && j >= 0;
+    }
+
+    function handleHover(e: KonvaEventObject<MouseEvent>) {
+        const pointerPosition = e.target.getStage()?.getPointerPosition();
+        if (!pointerPosition) {
+            return;
+        }
+        const row = Math.floor(pointerPosition.y / cellSize);
+        const col = Math.floor(pointerPosition.x / cellSize);
+
+        if (cells.current && contains(row, col) && cells.current[row][col].animal != null) {
+            const animal = cells.current[row][col].animal;
+            setHoveredCell(animal);
+        } else {
+            setHoveredCell(null);
+        }
     }
 
     const fetchAnimalsQuery = trpc.getAllAnimals.useQuery();
@@ -369,10 +389,18 @@ export default function Grid({ cellSize = 3 }) {
     };
 
     return (
-        <Stage width={canvasSize} height={canvasSize}>
-            <Layer ref={layerRef}>
-                <Shape width={canvasSize} height={canvasSize} sceneFunc={(ctx) => drawScene(ctx)} />
-            </Layer>
-        </Stage>
+        <>
+            <Stage width={canvasSize} height={canvasSize} onMouseMove={(e) => handleHover(e)}>
+                <Layer ref={layerRef}>
+                    <Shape width={canvasSize} height={canvasSize} sceneFunc={(ctx) => drawScene(ctx)} />
+                </Layer>
+            </Stage>
+            <div
+                className={`fixed top-1/2 -translate-y-1/2 -translate-x-1/2`}
+                style={{ left: `calc(50vw + ${canvasSize / 2}px + (50vw - ${canvasSize / 2}px) / 2)` }}
+            >
+                {hoveredCell != null && <AnimalInfo {...hoveredCell} />}
+            </div>
+        </>
     );
 }
