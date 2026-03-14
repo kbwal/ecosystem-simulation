@@ -16,7 +16,7 @@ export default function Explanation() {
                 You do currently need to program your own script in TypeScript, but for sufficiently simple scripts you can
                 probably get an LLM to make what you want
                 <br />
-                Each frame (currently set to 1 frame / second), the cells update to reflect the animal's actions
+                Each frame, the cells update to reflect the animal's actions
                 <br />
                 The code is{" "}
                 <a className="text-blue-400" href="https://github.com/kbwal/ecosystem-simulation" target="_blank">

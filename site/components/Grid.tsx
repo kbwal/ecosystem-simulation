@@ -90,7 +90,7 @@ export default function Grid({ cellSize = 3 }) {
     useEffect(() => {
         let rafId: number;
         let lastTime = 0;
-        const MS_PER_TICK = 1000;
+        const MS_PER_TICK = 2500;
         let numTicks = 0;
         const sleepingAnimals = new WeakMap<object, number>();
 
