@@ -1,6 +1,11 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import TRPCProvider from "./trpc-provider";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+    title: "Ecosystem Simulation",
+};
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
