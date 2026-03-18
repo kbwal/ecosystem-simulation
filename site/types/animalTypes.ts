@@ -26,5 +26,5 @@ export type AnimalAction = {
 };
 
 export type AnimalScript = {
-    tick(state: AnimalState): AnimalAction | undefined;
+    (state: AnimalState): AnimalAction | undefined;
 };

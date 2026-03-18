@@ -82,7 +82,7 @@ export default function Grid({ cellSize = 3 }) {
                 compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.None },
             }).outputText;
             const fn = new Function(`return (${jsRawScript})`)();
-            baseSpeciesRef.current.push({ ...currentAnimal, energy: 0, age: 0, script: { tick: fn } });
+            baseSpeciesRef.current.push({ ...currentAnimal, energy: 0, age: 0, script: fn });
         }
         cells.current = initCells(baseSpeciesRef.current);
     }, [dbAnimals]);
@@ -117,7 +117,7 @@ export default function Grid({ cellSize = 3 }) {
 
                             const { nearbyAnimals, nearbyFood } = getNearbyInfo(i, j, 4, GRID, cells.current);
 
-                            const action = animal.script.tick({
+                            const action = animal.script({
                                 energy: animal.energy,
                                 age: animal.age,
                                 nearbyFood: nearbyFood,
@@ -169,7 +169,7 @@ export default function Grid({ cellSize = 3 }) {
                             } else if (eat) {
                                 const currentCellFood = cells.current[i][j].food;
                                 if (currentCellFood != null) {
-                                    animal.energy += currentCellFood.value * 5;
+                                    animal.energy += currentCellFood.value * 5; // food is (0,1)
                                     cells.current[i][j] = {
                                         animal: animal,
                                         food: null,
@@ -185,6 +185,8 @@ export default function Grid({ cellSize = 3 }) {
                                     if (contains(adjI, adjJ, GRID) && cells.current[adjI][adjJ].animal) {
                                         const preyEnergy = cells.current[adjI][adjJ].animal?.energy;
                                         if (preyEnergy != undefined) {
+                                            // not sure about value here, my intuition is that 0.1 would give
+                                            // 10 energy max, which seems fine
                                             animal.energy += preyEnergy * 0.1;
                                         }
                                         cells.current[adjI][adjJ] = {

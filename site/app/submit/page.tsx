@@ -116,7 +116,7 @@ export default function Submit() {
                             onChange={(e) => setScript(e.target.value)}
                         />
                         <FieldDescription>
-                            The script should have one function called tick() that takes a parameter of {"{"}
+                            The script should have one function (call it whatever) that takes a parameter of {"{"}
                             energy: number; age: number; nearbyFood:{" "}
                             {'{ distance: number; direction: "r" | "l" | "u" | "d" }[];'}
                             nearbyAnimals: {'{ distance: number; direction: "r" | "l" | "u" | "d" }[];'}
