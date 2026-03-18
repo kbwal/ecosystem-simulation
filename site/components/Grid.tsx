@@ -7,6 +7,11 @@ import { trpc } from "@/utils/trpc";
 import ts from "typescript";
 import { KonvaEventObject } from "konva/lib/Node";
 import AnimalInfo from "./AnimalInfo";
+import { getAdjIndexes } from "@/utils/getAdjIndexes";
+import { getRandomDirections } from "@/utils/getRandomDirections";
+import { contains } from "@/utils/contains";
+import { CellType } from "@/types/cellType";
+import { getNearbyInfo } from "@/utils/getNearbyInfo";
 
 export default function Grid({ cellSize = 3 }) {
     const [hoveredCell, setHoveredCell] = useState<Animal | null>(null);
@@ -19,10 +24,6 @@ export default function Grid({ cellSize = 3 }) {
     const SLEEPING_BONUS = 20;
     const REPRODUCTION_COST = 25;
 
-    function contains(i: number, j: number) {
-        return i <= GRID - 1 && i >= 0 && j <= GRID - 1 && j >= 0;
-    }
-
     function handleHover(e: KonvaEventObject<MouseEvent>) {
         const pointerPosition = e.target.getStage()?.getPointerPosition();
         if (!pointerPosition) {
@@ -31,7 +32,7 @@ export default function Grid({ cellSize = 3 }) {
         const row = Math.floor(pointerPosition.y / cellSize);
         const col = Math.floor(pointerPosition.x / cellSize);
 
-        if (cells.current && contains(row, col) && cells.current[row][col].animal != null) {
+        if (cells.current && contains(row, col, GRID) && cells.current[row][col].animal != null) {
             const animal = cells.current[row][col].animal;
             setHoveredCell(animal);
         } else {
@@ -42,7 +43,7 @@ export default function Grid({ cellSize = 3 }) {
     const fetchAnimalsQuery = trpc.getAllAnimals.useQuery();
     const dbAnimals = fetchAnimalsQuery.data;
     const baseSpeciesRef = useRef<Animal[]>([]);
-    const cells = useRef<ReturnType<typeof initCells> | null>(null);
+    const cells = useRef<CellType[][]>(null);
 
     function initCells(loadedAnimals: Animal[]) {
         return Array.from({ length: GRID }, () =>
@@ -114,46 +115,7 @@ export default function Grid({ cellSize = 3 }) {
                             animal.age++;
                             animalPerformedActionThisTick.add(animal);
 
-                            const nearbyFood: { distance: number; direction: "r" | "l" | "u" | "d"; value: number }[] = [];
-                            const nearbyAnimals: { distance: number; direction: "r" | "l" | "u" | "d" }[] = [];
-                            for (let delta = -3; delta < 4; delta++) {
-                                if (contains(i + delta, j) && delta != 0) {
-                                    const currentFood = cells.current[i + delta][j].food;
-                                    const currentAnimal = cells.current[i + delta][j].animal;
-                                    if (currentFood != null) {
-                                        nearbyFood.push({
-                                            distance: Math.abs(delta),
-                                            direction: delta < 0 ? "u" : "d",
-                                            value: currentFood.value,
-                                        });
-                                    }
-                                    if (currentAnimal != null) {
-                                        nearbyAnimals.push({
-                                            distance: Math.abs(delta),
-                                            direction: delta < 0 ? "u" : "d",
-                                        });
-                                    }
-                                }
-                            }
-                            for (let delta = -3; delta < 4; delta++) {
-                                if (contains(i, j + delta) && delta != 0) {
-                                    const currentFood = cells.current[i][j + delta].food;
-                                    const currentAnimal = cells.current[i][j + delta].animal;
-                                    if (currentFood != null) {
-                                        nearbyFood.push({
-                                            distance: Math.abs(delta),
-                                            direction: delta < 0 ? "l" : "r",
-                                            value: currentFood.value,
-                                        });
-                                    }
-                                    if (currentAnimal != null) {
-                                        nearbyAnimals.push({
-                                            distance: Math.abs(delta),
-                                            direction: delta < 0 ? "l" : "r",
-                                        });
-                                    }
-                                }
-                            }
+                            const { nearbyAnimals, nearbyFood } = getNearbyInfo(i, j, 4, GRID, cells.current);
 
                             const action = animal.script.tick({
                                 energy: animal.energy,
@@ -162,10 +124,9 @@ export default function Grid({ cellSize = 3 }) {
                                 nearbyAnimals: nearbyAnimals,
                             });
 
-                            if (!action) {
-                                animal.energy -= METABOLISM_COST;
-                                continue;
-                            }
+                            animal.energy -= METABOLISM_COST;
+
+                            if (!action) continue;
 
                             const direction = action.move;
                             const eat = action.eat;
@@ -193,37 +154,12 @@ export default function Grid({ cellSize = 3 }) {
 
                             if (direction) {
                                 animal.energy -= MOVEMENT_COST + animal.age * 0.01;
-                                if (direction == "u" && contains(i - 1, j) && !cells.current[i - 1][j].animal) {
-                                    cells.current[i - 1][j] = {
+                                let { adjI, adjJ } = getAdjIndexes(direction, i, j);
+
+                                if (contains(adjI, adjJ, GRID) && !cells.current[adjI][adjJ].animal) {
+                                    cells.current[adjI][adjJ] = {
                                         animal: cell.animal,
-                                        food: cells.current[i - 1][j].food,
-                                    };
-                                    cells.current[i][j] = {
-                                        animal: null,
-                                        food: cell.food,
-                                    };
-                                } else if (direction == "d" && contains(i + 1, j) && !cells.current[i + 1][j].animal) {
-                                    cells.current[i + 1][j] = {
-                                        animal: cell.animal,
-                                        food: cells.current[i + 1][j].food,
-                                    };
-                                    cells.current[i][j] = {
-                                        animal: null,
-                                        food: cell.food,
-                                    };
-                                } else if (direction == "l" && contains(i, j - 1) && !cells.current[i][j - 1].animal) {
-                                    cells.current[i][j - 1] = {
-                                        animal: cell.animal,
-                                        food: cells.current[i][j - 1].food,
-                                    };
-                                    cells.current[i][j] = {
-                                        animal: null,
-                                        food: cell.food,
-                                    };
-                                } else if (direction == "r" && contains(i, j + 1) && !cells.current[i][j + 1].animal) {
-                                    cells.current[i][j + 1] = {
-                                        animal: cell.animal,
-                                        food: cells.current[i][j + 1].food,
+                                        food: cells.current[adjI][adjJ].food,
                                     };
                                     cells.current[i][j] = {
                                         animal: null,
@@ -243,92 +179,45 @@ export default function Grid({ cellSize = 3 }) {
                                 sleepingAnimals.set(animal, 1);
                                 animal.energy += SLEEPING_BONUS;
                             } else if (predate) {
-                                if (contains(i - 1, j) && cells.current[i - 1][j].animal) {
-                                    const preyEnergy = cells.current[i - 1][j].animal?.energy;
-                                    if (preyEnergy != undefined) {
-                                        animal.energy += preyEnergy * 0.1;
+                                const dirs = getRandomDirections();
+                                for (const dir of dirs) {
+                                    let { adjI, adjJ } = getAdjIndexes(dir, i, j);
+                                    if (contains(adjI, adjJ, GRID) && cells.current[adjI][adjJ].animal) {
+                                        const preyEnergy = cells.current[adjI][adjJ].animal?.energy;
+                                        if (preyEnergy != undefined) {
+                                            animal.energy += preyEnergy * 0.1;
+                                        }
+                                        cells.current[adjI][adjJ] = {
+                                            animal: cell.animal,
+                                            food: cells.current[adjI][adjJ].food,
+                                        };
+                                        cells.current[i][j] = {
+                                            animal: null,
+                                            food: cell.food,
+                                        };
+                                        break;
                                     }
-                                    cells.current[i - 1][j] = {
-                                        animal: cell.animal,
-                                        food: cells.current[i - 1][j].food,
-                                    };
-                                    cells.current[i][j] = {
-                                        animal: null,
-                                        food: cell.food,
-                                    };
-                                } else if (contains(i + 1, j) && cells.current[i + 1][j].animal) {
-                                    const preyEnergy = cells.current[i + 1][j].animal?.energy;
-                                    if (preyEnergy != undefined) {
-                                        animal.energy += preyEnergy * 0.1;
-                                    }
-                                    cells.current[i + 1][j] = {
-                                        animal: cell.animal,
-                                        food: cells.current[i + 1][j].food,
-                                    };
-                                    cells.current[i][j] = {
-                                        animal: null,
-                                        food: cell.food,
-                                    };
-                                } else if (contains(i, j - 1) && cells.current[i][j - 1].animal) {
-                                    const preyEnergy = cells.current[i][j - 1].animal?.energy;
-                                    if (preyEnergy != undefined) {
-                                        animal.energy += preyEnergy * 0.1;
-                                    }
-                                    cells.current[i][j - 1] = {
-                                        animal: cell.animal,
-                                        food: cells.current[i][j - 1].food,
-                                    };
-                                    cells.current[i][j] = {
-                                        animal: null,
-                                        food: cell.food,
-                                    };
-                                } else if (contains(i, j + 1) && cells.current[i][j + 1].animal) {
-                                    const preyEnergy = cells.current[i][j + 1].animal?.energy;
-                                    if (preyEnergy != undefined) {
-                                        animal.energy += preyEnergy * 0.1;
-                                    }
-                                    cells.current[i][j + 1] = {
-                                        animal: cell.animal,
-                                        food: cells.current[i][j + 1].food,
-                                    };
-                                    cells.current[i][j] = {
-                                        animal: null,
-                                        food: cell.food,
-                                    };
                                 }
                             } else if (reproduce) {
-                                const newAnimal: Animal = {
-                                    ...animal,
-                                    energy: Math.floor(Math.random() * 100),
-                                    age: 0,
-                                    maxAge: (Math.random() - 0.5) * 3 + animal.maxAge,
-                                };
-
-                                if (contains(i - 1, j) && !cells.current[i - 1][j].animal) {
-                                    cells.current[i - 1][j] = {
-                                        animal: newAnimal,
-                                        food: cells.current[i - 1][j].food,
-                                    };
-                                } else if (contains(i + 1, j) && !cells.current[i + 1][j].animal) {
-                                    cells.current[i + 1][j] = {
-                                        animal: newAnimal,
-                                        food: cells.current[i + 1][j].food,
-                                    };
-                                } else if (contains(i, j - 1) && !cells.current[i][j - 1].animal) {
-                                    cells.current[i][j - 1] = {
-                                        animal: newAnimal,
-                                        food: cells.current[i][j - 1].food,
-                                    };
-                                } else if (contains(i, j + 1) && !cells.current[i][j + 1].animal) {
-                                    cells.current[i][j + 1] = {
-                                        animal: newAnimal,
-                                        food: cells.current[i][j + 1].food,
-                                    };
+                                const dirs = getRandomDirections();
+                                for (const dir of dirs) {
+                                    let { adjI, adjJ } = getAdjIndexes(dir, i, j);
+                                    if (contains(adjI, adjJ, GRID) && !cells.current[adjI][adjJ].animal) {
+                                        animal.energy -= REPRODUCTION_COST;
+                                        const newAnimal: Animal = {
+                                            ...animal,
+                                            energy: REPRODUCTION_COST,
+                                            age: 0,
+                                            maxAge: (Math.random() - 0.5) * 3 + animal.maxAge, // small mutation?
+                                        };
+                                        cells.current[adjI][adjJ] = {
+                                            animal: newAnimal,
+                                            food: cells.current[adjI][adjJ].food,
+                                        };
+                                        break;
+                                    }
                                 }
-                                animal.energy -= REPRODUCTION_COST;
                             }
-
-                            animal.energy -= METABOLISM_COST;
                         }
 
                         if (food == null && Math.random() < Math.max(0.05 / numTicks, 0.001)) {
