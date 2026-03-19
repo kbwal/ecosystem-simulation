@@ -112,6 +112,10 @@ export default function Grid({ cellSize = 3 }) {
             if (timestamp - lastTime >= MS_PER_TICK) {
                 numTicks++;
                 lastTime = timestamp;
+                const vm = quickJSRef.current?.newContext();
+                // 16 mb shared for the entire context
+                // this should be recycled constantly though
+                vm?.runtime.setMemoryLimit(2 ** 10 * 2 ** 10 * 16);
                 for (let i = 0; i < GRID; i++) {
                     for (let j = 0; j < GRID; j++) {
                         const cell = cells.current[i][j];
@@ -119,15 +123,14 @@ export default function Grid({ cellSize = 3 }) {
                         const animal = cell.animal;
                         const food = cell.food;
 
-                        if (animal && quickJSRef.current) {
+                        if (animal && vm) {
                             animal.age++;
                             animalPerformedActionThisTick.add(animal);
 
                             const { nearbyAnimals, nearbyFood } = getNearbyInfo(i, j, 4, GRID, cells.current);
 
-                            let t1 = Date.now();
                             const action = runScriptSafely(
-                                quickJSRef.current,
+                                vm,
                                 {
                                     age: animal.age,
                                     energy: animal.energy,
@@ -136,9 +139,6 @@ export default function Grid({ cellSize = 3 }) {
                                 },
                                 animal.script.toString(),
                             );
-                            if (Math.random() < 0.1) {
-                                console.log(Date.now() - t1);
-                            }
 
                             animal.energy -= METABOLISM_COST;
 

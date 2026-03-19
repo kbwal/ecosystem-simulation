@@ -1,17 +1,12 @@
 import { AnimalAction, AnimalState } from "@/types/animalTypes";
-import { QuickJSWASMModule } from "quickjs-emscripten";
+import { QuickJSContext } from "quickjs-emscripten";
 
-export function runScriptSafely(QuickJS: QuickJSWASMModule, state: AnimalState, script: string) {
-    const vm = QuickJS.newContext();
-
+export function runScriptSafely(vm: QuickJSContext, state: AnimalState, script: string) {
     const startTime = Date.now();
+    const LIMIT_MS = 25;
     vm.runtime.setInterruptHandler(() => {
-        return Date.now() - startTime > 50;
+        return Date.now() - startTime > LIMIT_MS;
     });
-
-    // 8 megabytes -> this should give breathing room for more things in state in the future
-    // might even be over-kill
-    vm.runtime.setMemoryLimit(2 ** 10 * 2 ** 10 * 8);
 
     try {
         const fnResult = vm.evalCode(`(${script})`);
@@ -68,6 +63,5 @@ export function runScriptSafely(QuickJS: QuickJSWASMModule, state: AnimalState, 
         return value;
     } finally {
         vm.runtime.removeInterruptHandler();
-        vm.dispose();
     }
 }
