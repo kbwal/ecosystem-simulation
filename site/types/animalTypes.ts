@@ -5,7 +5,7 @@ export type Animal = {
     color: string;
     age: number;
     energy: number;
-    script: AnimalScript;
+    script: string;
     maxAge: number;
 };
 

@@ -1,5 +1,5 @@
 "use client";
-import { RefObject, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Stage, Layer, Shape } from "react-konva";
 import Konva from "konva";
 import { Animal } from "@/types/animalTypes";
@@ -12,6 +12,8 @@ import { getRandomDirections } from "@/utils/getRandomDirections";
 import { contains } from "@/utils/contains";
 import { CellType } from "@/types/cellType";
 import { getNearbyInfo } from "@/utils/getNearbyInfo";
+import { runScriptSafely } from "@/utils/runScriptSafely";
+import { newQuickJSWASMModule, QuickJSWASMModule } from "quickjs-emscripten";
 
 export default function Grid({ cellSize = 3 }) {
     const [hoveredCell, setHoveredCell] = useState<Animal | null>(null);
@@ -39,6 +41,13 @@ export default function Grid({ cellSize = 3 }) {
             setHoveredCell(null);
         }
     }
+
+    const quickJSRef = useRef<QuickJSWASMModule | null>(null);
+    useEffect(() => {
+        newQuickJSWASMModule().then((QuickJSModule) => {
+            quickJSRef.current = QuickJSModule;
+        });
+    });
 
     const fetchAnimalsQuery = trpc.getAllAnimals.useQuery();
     const dbAnimals = fetchAnimalsQuery.data;
@@ -81,8 +90,7 @@ export default function Grid({ cellSize = 3 }) {
             const jsRawScript = ts.transpileModule(currentAnimal.script, {
                 compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.None },
             }).outputText;
-            const fn = new Function(`return (${jsRawScript})`)();
-            baseSpeciesRef.current.push({ ...currentAnimal, energy: 0, age: 0, script: fn });
+            baseSpeciesRef.current.push({ ...currentAnimal, energy: 0, age: 0, script: jsRawScript });
         }
         cells.current = initCells(baseSpeciesRef.current);
     }, [dbAnimals]);
@@ -111,18 +119,26 @@ export default function Grid({ cellSize = 3 }) {
                         const animal = cell.animal;
                         const food = cell.food;
 
-                        if (animal) {
+                        if (animal && quickJSRef.current) {
                             animal.age++;
                             animalPerformedActionThisTick.add(animal);
 
                             const { nearbyAnimals, nearbyFood } = getNearbyInfo(i, j, 4, GRID, cells.current);
 
-                            const action = animal.script({
-                                energy: animal.energy,
-                                age: animal.age,
-                                nearbyFood: nearbyFood,
-                                nearbyAnimals: nearbyAnimals,
-                            });
+                            let t1 = Date.now();
+                            const action = runScriptSafely(
+                                quickJSRef.current,
+                                {
+                                    age: animal.age,
+                                    energy: animal.energy,
+                                    nearbyAnimals: nearbyAnimals,
+                                    nearbyFood: nearbyFood,
+                                },
+                                animal.script.toString(),
+                            );
+                            if (Math.random() < 0.1) {
+                                console.log(Date.now() - t1);
+                            }
 
                             animal.energy -= METABOLISM_COST;
 
