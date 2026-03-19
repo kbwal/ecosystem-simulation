@@ -47,7 +47,7 @@ export default function Grid({ cellSize = 3 }) {
         newQuickJSWASMModule().then((QuickJSModule) => {
             quickJSRef.current = QuickJSModule;
         });
-    });
+    }, []);
 
     const fetchAnimalsQuery = trpc.getAllAnimals.useQuery();
     const dbAnimals = fetchAnimalsQuery.data;
@@ -148,14 +148,6 @@ export default function Grid({ cellSize = 3 }) {
 
                             animal.energy -= METABOLISM_COST * animal.maxAge * 0.001;
 
-                            if (!action) continue;
-
-                            const direction = action.move;
-                            const eat = action.eat;
-                            const reproduce = action.reproduce;
-                            const sleep = action.sleep;
-                            const predate = action.predate;
-
                             if (animal.energy <= 0 || animal.age > animal.maxAge) {
                                 cells.current[i][j] = {
                                     animal: null,
@@ -163,6 +155,14 @@ export default function Grid({ cellSize = 3 }) {
                                 };
                                 continue;
                             }
+
+                            if (!action) continue;
+
+                            const direction = action.move;
+                            const eat = action.eat;
+                            const reproduce = action.reproduce;
+                            const sleep = action.sleep;
+                            const predate = action.predate;
 
                             const howLongAsleep = sleepingAnimals.get(animal);
                             if (howLongAsleep != undefined) {
@@ -174,7 +174,7 @@ export default function Grid({ cellSize = 3 }) {
                                 }
                             }
 
-                            if (direction) {
+                            if (direction && animal.energy >= MOVEMENT_COST + animal.age * 0.01) {
                                 animal.energy -= MOVEMENT_COST + animal.age * 0.01;
                                 let { adjI, adjJ } = getAdjIndexes(direction, i, j);
 
@@ -222,7 +222,7 @@ export default function Grid({ cellSize = 3 }) {
                                         break;
                                     }
                                 }
-                            } else if (reproduce) {
+                            } else if (reproduce && animal.energy >= REPRODUCTION_COST) {
                                 const dirs = getRandomDirections();
                                 for (const dir of dirs) {
                                     let { adjI, adjJ } = getAdjIndexes(dir, i, j);
