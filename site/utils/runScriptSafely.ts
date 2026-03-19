@@ -9,6 +9,10 @@ export function runScriptSafely(QuickJS: QuickJSWASMModule, state: AnimalState, 
         return Date.now() - startTime > 50;
     });
 
+    // 8 megabytes -> this should give breathing room for more things in state in the future
+    // might even be over-kill
+    vm.runtime.setMemoryLimit(2 ** 10 * 2 ** 10 * 8);
+
     try {
         const fnResult = vm.evalCode(`(${script})`);
         if (fnResult.error) {
