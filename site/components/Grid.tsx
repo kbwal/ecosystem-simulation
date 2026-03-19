@@ -245,6 +245,7 @@ export default function Grid({ cellSize = 3 }) {
                         }
                     }
                 }
+                vm?.dispose();
                 layerRef.current?.batchDraw();
             }
             rafId = requestAnimationFrame(tick);
