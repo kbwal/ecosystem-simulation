@@ -10,12 +10,7 @@ export const colorSchema = z
         return parts.every((n) => n >= 0 && n <= 255);
     });
 
-export const scriptSchema = z
-    .string()
-    .min(4)
-    .refine((val) => {
-        return val.includes("tick");
-    });
+export const scriptSchema = z.string().min(1);
 
 export const submissionSchema = z.object({
     name: z.string().min(1),

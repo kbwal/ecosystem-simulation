@@ -21,7 +21,7 @@ export default function Grid({ cellSize = 3 }) {
     const GRID = 50;
     const canvasSize = GRID * cellSize;
 
-    const MOVEMENT_COST = 2;
+    const MOVEMENT_COST = 1;
     const METABOLISM_COST = 1;
     const SLEEPING_BONUS = 20;
     const REPRODUCTION_COST = 25;
@@ -99,7 +99,7 @@ export default function Grid({ cellSize = 3 }) {
     useEffect(() => {
         let rafId: number;
         let lastTime = 0;
-        const MS_PER_TICK = 2500;
+        const MS_PER_TICK = 1000;
         let numTicks = 0;
         const sleepingAnimals = new WeakMap<object, number>();
 
@@ -112,10 +112,12 @@ export default function Grid({ cellSize = 3 }) {
             if (timestamp - lastTime >= MS_PER_TICK) {
                 numTicks++;
                 lastTime = timestamp;
+
                 const vm = quickJSRef.current?.newContext();
                 // 16 mb shared for the entire context
                 // this should be recycled constantly though
                 vm?.runtime.setMemoryLimit(2 ** 10 * 2 ** 10 * 16);
+
                 for (let i = 0; i < GRID; i++) {
                     for (let j = 0; j < GRID; j++) {
                         const cell = cells.current[i][j];
@@ -136,11 +138,15 @@ export default function Grid({ cellSize = 3 }) {
                                     energy: animal.energy,
                                     nearbyAnimals: nearbyAnimals,
                                     nearbyFood: nearbyFood,
+                                    position: {
+                                        x: j,
+                                        y: i,
+                                    },
                                 },
                                 animal.script.toString(),
                             );
 
-                            animal.energy -= METABOLISM_COST;
+                            animal.energy -= METABOLISM_COST * animal.maxAge * 0.001;
 
                             if (!action) continue;
 
@@ -153,14 +159,14 @@ export default function Grid({ cellSize = 3 }) {
                             if (animal.energy <= 0 || animal.age > animal.maxAge) {
                                 cells.current[i][j] = {
                                     animal: null,
-                                    food: null,
+                                    food: cells.current[i][j].food,
                                 };
                                 continue;
                             }
 
                             const howLongAsleep = sleepingAnimals.get(animal);
                             if (howLongAsleep != undefined) {
-                                if (howLongAsleep < animal.maxAge * 0.15) {
+                                if (howLongAsleep < 10) {
                                     sleepingAnimals.set(animal, howLongAsleep + 1);
                                     continue;
                                 } else {
@@ -238,7 +244,7 @@ export default function Grid({ cellSize = 3 }) {
                             }
                         }
 
-                        if (food == null && Math.random() < Math.max(0.05 / numTicks, 0.001)) {
+                        if (food == null && Math.random() < Math.max(0.05 / numTicks, 0.01)) {
                             cells.current[i][j].food = {
                                 value: Math.random(),
                             };
@@ -272,11 +278,12 @@ export default function Grid({ cellSize = 3 }) {
                     ctx.fillStyle = `rgb(${animal.color})`;
                     ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
                 }
-                // const food = cell.food;
-                // if (food != null) {
-                //     ctx.fillStyle = `rgb(255, 255, 255)`;
-                //     ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
-                // }
+                const food = cell.food;
+                if (food != null && animal == null) {
+                    const scaledRGBFoodValue = food.value * 25;
+                    ctx.fillStyle = `rgb(${scaledRGBFoodValue},${scaledRGBFoodValue},${scaledRGBFoodValue})`;
+                    ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                }
             }
         }
 

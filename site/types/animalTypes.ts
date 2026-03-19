@@ -12,9 +12,9 @@ export type Animal = {
 export type AnimalState = {
     readonly energy: number;
     readonly age: number;
-    // readonly position: { x: number; y: number };
-    readonly nearbyFood: { distance: number; direction: "r" | "l" | "u" | "d" }[];
-    readonly nearbyAnimals: { distance: number; direction: "r" | "l" | "u" | "d" }[];
+    readonly position: { x: number; y: number };
+    readonly nearbyFood: { deltaX: number; deltaY: number; value: number }[];
+    readonly nearbyAnimals: { deltaX: number; deltaY: number; name: string }[];
 };
 
 export type AnimalAction = {
@@ -23,8 +23,4 @@ export type AnimalAction = {
     reproduce?: boolean;
     sleep?: boolean;
     predate?: boolean;
-};
-
-export type AnimalScript = {
-    (state: AnimalState): AnimalAction | undefined;
 };

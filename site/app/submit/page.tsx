@@ -83,7 +83,7 @@ export default function Submit() {
                             >
                                 color
                             </span>
-                            do you want? (3 numbers, comma separated, no spaces please!)
+                            do you want? (3 RGB numbers, comma separated, no spaces please!)
                         </FieldLabel>
                         <Input
                             id="color"
@@ -110,20 +110,20 @@ export default function Submit() {
                         <FieldLabel htmlFor="script">TypeScript code here</FieldLabel>
                         <Textarea
                             id="script"
-                            placeholder="Paste script here"
+                            placeholder={`function placeholder(state) {\n\tif (state.energy < 300) {\n\t\treturn {\n\t\t\tsleep: true,\n\t\t};\n\t}\n}`}
                             rows={4}
                             value={script}
                             onChange={(e) => setScript(e.target.value)}
                         />
                         <FieldDescription>
-                            The script should have one function (call it whatever) that takes a parameter of {"{"}
-                            energy: number; age: number; nearbyFood:{" "}
-                            {'{ distance: number; direction: "r" | "l" | "u" | "d" }[];'}
-                            nearbyAnimals: {'{ distance: number; direction: "r" | "l" | "u" | "d" }[];'}
-                            {"}"}
+                            The script should have one function (call it whatever) that takes a parameter of an object of
+                            type:
                             <br />
-                            It should return an object of type {"{"}move?: "r" | "l" | "u" | "d"; eat?: boolean; reproduce?:
-                            boolean; sleep?: boolean; predate?: boolean;{"}"}
+                            {`{ energy: number; age: number; position: { x: number; y: number }; nearbyFood: { deltaX: number; deltaY: number; value: number }[]; nearbyAnimals: { deltaX: number; deltaY: number; name: string }[]; }`}
+                            <br />
+                            It should return an object of type:
+                            <br />
+                            {`{ move?: "r" | "l" | "u" | "d"; eat?: boolean; reproduce?: boolean; sleep?: boolean; predate?: boolean; }`}
                             <br />
                             Please don't import any libraries or try breaking my server :)
                             <br />

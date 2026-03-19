@@ -26,12 +26,20 @@ export function runScriptSafely(vm: QuickJSContext, state: AnimalState, script: 
         energyHandle.dispose();
         ageHandle.dispose();
 
+        const positionResult = vm.evalCode(`(${JSON.stringify(state.position)})`);
         const nearbyAnimalsResult = vm.evalCode(`(${JSON.stringify(state.nearbyAnimals)})`);
         const nearbyFoodResult = vm.evalCode(`(${JSON.stringify(state.nearbyFood)})`);
 
-        if (!nearbyAnimalsResult.error && !nearbyFoodResult.error) {
+        if (!nearbyAnimalsResult.error && !nearbyFoodResult.error && !positionResult.error) {
             vm.setProp(stateHandle, "nearbyAnimals", vm.unwrapResult(nearbyAnimalsResult));
             vm.setProp(stateHandle, "nearbyFood", vm.unwrapResult(nearbyFoodResult));
+            vm.setProp(stateHandle, "position", vm.unwrapResult(positionResult));
+        }
+
+        if (positionResult.error) {
+            positionResult.error.dispose();
+        } else {
+            vm.unwrapResult(positionResult).dispose();
         }
 
         if (nearbyAnimalsResult.error) {

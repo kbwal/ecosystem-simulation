@@ -4,6 +4,7 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { appRouter } from "./appRouter";
 import { createTRPCContext } from "./trpc";
 import "dotenv/config";
+// import { seedDatabase } from "./seedDatabase";
 
 const app = express();
 app.use(cors({ origin: process.env.FRONTEND_URL || "http://localhost:3000" }));
@@ -17,6 +18,7 @@ app.use(
 
 app.get("/", (req, res) => {
     res.send("Backend is running");
+    // seedDatabase();
 });
 
 const PORT = process.env.PORT || 3001;
