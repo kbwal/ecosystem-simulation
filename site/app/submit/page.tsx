@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import { submissionSchema, submissionSchemaType } from "@/utils/submissionSchemas";
 import { trpc } from "@/utils/trpc";
 import { useRouter } from "next/navigation";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function Submit() {
+    const [loading, setLoading] = useState(false);
     const router = useRouter();
     const createAnimal = trpc.createAnimal.useMutation({
         onError: () => {
@@ -133,7 +135,9 @@ export default function Submit() {
                     <Button
                         className={`cursor-pointer ${!error ? "bg-zinc-900" : "bg-red-500"} min-h-10`}
                         onClick={async () => {
+                            setLoading(true);
                             if (maxAge == undefined) {
+                                setLoading(false);
                                 console.log("maxAge is undefined!");
                                 setError(true);
                                 await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -147,16 +151,20 @@ export default function Submit() {
                                     script: script,
                                 });
                                 if (!result) {
+                                    setLoading(false);
                                     setError(true);
                                     await new Promise((resolve) => setTimeout(resolve, 1500));
                                     setError(false);
                                 } else {
+                                    setLoading(false);
                                     router.push("/");
                                 }
                             }
                         }}
                     >
-                        {!error ? "Submit Animal" : "Error"}
+                        {error && "Error"}
+                        {!error && !loading && "Submit Animal"}
+                        {loading && !error && <Spinner />}
                     </Button>
                 </FieldGroup>
             </FieldSet>

@@ -14,8 +14,11 @@ import { CellType } from "@/types/cellType";
 import { getNearbyInfo } from "@/utils/getNearbyInfo";
 import { runScriptSafely } from "@/utils/runScriptSafely";
 import { newQuickJSWASMModule, QuickJSWASMModule } from "quickjs-emscripten";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function Grid({ cellSize = 3 }) {
+    const [loading, setLoading] = useState(true);
+    console.log(loading);
     const [hoveredCell, setHoveredCell] = useState<Animal | null>(null);
 
     const GRID = 50;
@@ -55,6 +58,7 @@ export default function Grid({ cellSize = 3 }) {
     const cells = useRef<CellType[][]>(null);
 
     function initCells(loadedAnimals: Animal[]) {
+        setLoading(false);
         return Array.from({ length: GRID }, () =>
             Array.from({ length: GRID }, () => {
                 const rand = Math.random();
@@ -305,17 +309,23 @@ export default function Grid({ cellSize = 3 }) {
 
     return (
         <>
-            <Stage width={canvasSize} height={canvasSize} onMouseMove={(e) => handleHover(e)}>
-                <Layer ref={layerRef}>
-                    <Shape width={canvasSize} height={canvasSize} sceneFunc={(ctx) => drawScene(ctx)} />
-                </Layer>
-            </Stage>
-            <div
-                className={`fixed top-1/2 -translate-y-1/2 -translate-x-1/2`}
-                style={{ left: `calc(50vw + ${canvasSize / 2}px + (50vw - ${canvasSize / 2}px) / 2)` }}
-            >
-                {hoveredCell != null && <AnimalInfo {...hoveredCell} />}
-            </div>
+            {!loading ? (
+                <>
+                    <Stage width={canvasSize} height={canvasSize} onMouseMove={(e) => handleHover(e)}>
+                        <Layer ref={layerRef}>
+                            <Shape width={canvasSize} height={canvasSize} sceneFunc={(ctx) => drawScene(ctx)} />
+                        </Layer>
+                    </Stage>
+                    <div
+                        className={`fixed top-1/2 -translate-y-1/2 -translate-x-1/2`}
+                        style={{ left: `calc(50vw + ${canvasSize / 2}px + (50vw - ${canvasSize / 2}px) / 2)` }}
+                    >
+                        {hoveredCell != null && <AnimalInfo {...hoveredCell} />}
+                    </div>
+                </>
+            ) : (
+                <Spinner />
+            )}
         </>
     );
 }
