@@ -10,22 +10,22 @@ export function getNearbyInfo(i: number, j: number, maxDelta: number, GRID: numb
             let newI = i + deltaY;
             let newJ = j + deltaX;
             if (contains(newI, newJ, GRID)) {
-                const currentFood = cells[newI][newJ].food;
-                const currentAnimal = cells[newI][newJ].animal;
+                const maybeNearbyFood = cells[newI][newJ].food;
+                const maybeNearbyAnimal = cells[newI][newJ].animal;
                 // not here because food can co-exist with an animal in a cell
-                if (currentFood != null) {
+                if (maybeNearbyFood != null) {
                     nearbyFood.push({
                         deltaX,
                         deltaY,
-                        value: currentFood.value,
+                        value: maybeNearbyFood.value,
                     });
                 }
                 // otherwise it might try to eat itself
-                if (currentAnimal != null && (deltaX != 0 || deltaY != 0)) {
+                if (maybeNearbyAnimal != null && (deltaX != 0 || deltaY != 0)) {
                     nearbyAnimals.push({
                         deltaX,
                         deltaY,
-                        name: currentAnimal.name,
+                        isMe: maybeNearbyAnimal.id == cells[i][j].animal!.id,
                     });
                 }
             }

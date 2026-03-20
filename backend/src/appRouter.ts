@@ -34,7 +34,7 @@ export const appRouter = router({
             readonly age: number;
             readonly position: { x: number; y: number };
             readonly nearbyFood: { deltaX: number; deltaY: number; value: number }[];
-            readonly nearbyAnimals: { deltaX: number; deltaY: number; name: string }[];
+            readonly nearbyAnimals: { deltaX: number; deltaY: number; isMe: boolean }[];
             
             Returns:
             move?: "r" | "l" | "u" | "d";
@@ -63,7 +63,7 @@ export const appRouter = router({
             }
         }),
 
-    getAllAnimals: publicProcedure.query(async ({ input, ctx }) => {
+    getAllAnimals: publicProcedure.query(async ({ ctx }) => {
         return await ctx.db.select().from(animals);
     }),
 });

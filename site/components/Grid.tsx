@@ -229,7 +229,7 @@ export default function Grid({ cellSize = 3 }) {
                                         cells.current[adjI][adjJ] = {
                                             animal: cell.animal,
                                             food: !cells.current[adjI][adjJ].food
-                                                ? null
+                                                ? { value: preyEnergy * 0.005 }
                                                 : // scavenge
                                                   { value: cells.current[adjI][adjJ].food.value + preyEnergy * 0.005 },
                                         };
@@ -297,6 +297,14 @@ export default function Grid({ cellSize = 3 }) {
                 if (animal != null) {
                     ctx.fillStyle = `rgb(${animal.color})`;
                     ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                    if (animal.lastAction?.predate) {
+                        ctx.strokeStyle = "rgb(255,0,0)";
+                        ctx.strokeRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                    }
+                    if (animal.lastAction?.reproduce) {
+                        ctx.strokeStyle = "rgb(0,0,255)";
+                        ctx.strokeRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                    }
                 }
                 const food = cell.food;
                 if (food != null && animal == null) {

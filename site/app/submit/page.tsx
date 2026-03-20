@@ -106,7 +106,7 @@ export default function Submit() {
                             The script should have one function (call it whatever) that takes a parameter of an object of
                             type:
                             <br />
-                            {`{ energy: number; age: number; position: { x: number; y: number }; nearbyFood: { deltaX: number; deltaY: number; value: number }[]; nearbyAnimals: { deltaX: number; deltaY: number; name: string }[]; }`}
+                            {`{ energy: number; age: number; position: { x: number; y: number }; nearbyFood: { deltaX: number; deltaY: number; value: number }[]; nearbyAnimals: { deltaX: number; deltaY: number; isMe: boolean }[]; }`}
                             <br />
                             It should return an object of type:
                             <br />

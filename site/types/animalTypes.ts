@@ -14,7 +14,7 @@ export type AnimalState = {
     readonly age: number;
     readonly position: { x: number; y: number };
     readonly nearbyFood: { deltaX: number; deltaY: number; value: number }[];
-    readonly nearbyAnimals: { deltaX: number; deltaY: number; name: string }[];
+    readonly nearbyAnimals: { deltaX: number; deltaY: number; isMe: boolean }[];
 };
 
 export type AnimalAction = {
