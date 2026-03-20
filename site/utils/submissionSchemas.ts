@@ -16,7 +16,6 @@ export const submissionSchema = z.object({
     name: z.string().min(1),
     author: z.string().min(1),
     color: colorSchema,
-    maxAge: z.number().gte(0),
     script: scriptSchema,
 });
 

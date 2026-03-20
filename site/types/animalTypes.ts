@@ -6,7 +6,6 @@ export type Animal = {
     age: number;
     energy: number;
     script: string;
-    maxAge: number;
     lastAction: AnimalAction | null;
 };
 

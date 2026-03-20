@@ -7,7 +7,6 @@ export const animals = pgTable("animals", {
     name: varchar({ length: 255 }).notNull(),
     author: varchar({ length: 255 }).notNull(),
     color: varchar({ length: 11 }).notNull(),
-    maxAge: integer().notNull(),
     script: text().notNull(),
 });
 

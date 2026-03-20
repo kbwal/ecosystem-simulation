@@ -23,7 +23,6 @@ export default function Submit() {
     const [name, setName] = useState("");
     const [author, setAuthor] = useState("");
     const [color, setColor] = useState("");
-    const [maxAge, setMaxAge] = useState<number | undefined>(undefined);
     const [script, setScript] = useState("");
     const [error, setError] = useState(false);
 
@@ -39,7 +38,6 @@ export default function Submit() {
             name: inputs.name,
             author: inputs.author,
             color: inputs.color,
-            maxAge: inputs.maxAge,
             script: inputs.script,
         });
         if (response == null) {
@@ -96,19 +94,6 @@ export default function Submit() {
                         />
                     </Field>
                     <Field>
-                        <FieldLabel htmlFor="maxAge">What age should your animal die?</FieldLabel>
-                        <Input
-                            id="maxAge"
-                            type="number"
-                            placeholder="22"
-                            value={maxAge ?? ""}
-                            onChange={(e) => {
-                                const parsed = parseInt(e.target.value);
-                                setMaxAge(isNaN(parsed) ? undefined : parsed);
-                            }}
-                        />
-                    </Field>
-                    <Field>
                         <FieldLabel htmlFor="script">TypeScript code here</FieldLabel>
                         <Textarea
                             id="script"
@@ -136,29 +121,20 @@ export default function Submit() {
                         className={`cursor-pointer ${!error ? "bg-zinc-900" : "bg-red-500"} min-h-10`}
                         onClick={async () => {
                             setLoading(true);
-                            if (maxAge == undefined) {
+                            const result = await handleSubmission({
+                                name: name,
+                                author: author,
+                                color: color,
+                                script: script,
+                            });
+                            if (!result) {
                                 setLoading(false);
-                                console.log("maxAge is undefined!");
                                 setError(true);
-                                await new Promise((resolve) => setTimeout(resolve, 1000));
+                                await new Promise((resolve) => setTimeout(resolve, 1500));
                                 setError(false);
                             } else {
-                                const result = await handleSubmission({
-                                    name: name,
-                                    author: author,
-                                    color: color,
-                                    maxAge: maxAge,
-                                    script: script,
-                                });
-                                if (!result) {
-                                    setLoading(false);
-                                    setError(true);
-                                    await new Promise((resolve) => setTimeout(resolve, 1500));
-                                    setError(false);
-                                } else {
-                                    setLoading(false);
-                                    router.push("/");
-                                }
+                                setLoading(false);
+                                router.push("/");
                             }
                         }}
                     >

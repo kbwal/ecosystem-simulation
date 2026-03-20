@@ -8,7 +8,6 @@ const initialAnimals = [
         name: "Grazer",
         author: "System",
         color: "100,200,100", // Greenish
-        maxAge: 400,
         script: `function tick(state) {
     if (state.energy > 80) return { reproduce: true };
     if (state.energy < 20) return { sleep: true };
@@ -37,7 +36,6 @@ const initialAnimals = [
         name: "Predator",
         author: "System",
         color: "200,50,50", // Red
-        maxAge: 300,
         script: `function tick(state) {
     if (state.energy > 120) return { reproduce: true };
     if (state.energy < 30) return { sleep: true };
@@ -66,7 +64,6 @@ const initialAnimals = [
         name: "Plant",
         author: "System",
         color: "30,120,30", // Dark Green
-        maxAge: 600,
         script: `function tick(state) {
     if (state.energy > 150) return { reproduce: true };
     return { sleep: true };
@@ -76,7 +73,6 @@ const initialAnimals = [
         name: "Ambush Spider",
         author: "System",
         color: "100,100,100", // Grey
-        maxAge: 450,
         script: `function tick(state) {
     if (state.energy > 100) return { reproduce: true };
     let adjacentPrey = state.nearbyAnimals.find(a => Math.abs(a.deltaX) + Math.abs(a.deltaY) === 1);
@@ -88,7 +84,6 @@ const initialAnimals = [
         name: "Cowardly Scavenger",
         author: "System",
         color: "180,180,50", // Yellowish
-        maxAge: 250,
         script: `function tick(state) {
     if (state.energy > 70) return { reproduce: true };
     
@@ -131,7 +126,6 @@ const initialAnimals = [
         name: "ZigZag Tracker",
         author: "System",
         color: "200,100,200", // Pink/Purple
-        maxAge: 350,
         script: `function tick(state) {
     if (state.energy > 90) return { reproduce: true };
     if (state.energy < 15) return { sleep: true };
@@ -151,7 +145,6 @@ const initialAnimals = [
         name: "Swarm Bee",
         author: "System",
         color: "255,200,0", // Gold/Yellow
-        maxAge: 200,
         script: `function tick(state) {
     if (state.energy > 60) return { reproduce: true };
     

@@ -103,7 +103,7 @@ export default function Grid({ cellSize = 3 }) {
         let rafId: number;
         let lastTime = 0;
         let numTicks = 0;
-        const msPerTick = 2500;
+        const msPerTick = 100;
         const sleepingAnimals = new WeakMap<object, number>();
 
         const tick = (timestamp: number) => {
@@ -149,9 +149,9 @@ export default function Grid({ cellSize = 3 }) {
                                 animal.script.toString(),
                             );
 
-                            animal.energy -= METABOLISM_COST * animal.maxAge * 0.001;
+                            animal.energy -= METABOLISM_COST + Math.pow(animal.age / 50, 1.5);
 
-                            if (animal.energy <= 0 || animal.age > animal.maxAge) {
+                            if (animal.energy <= 0) {
                                 cells.current[i][j] = {
                                     animal: null,
                                     food: cells.current[i][j].food,
@@ -253,7 +253,6 @@ export default function Grid({ cellSize = 3 }) {
                                             ...animal,
                                             energy: REPRODUCTION_COST,
                                             age: 0,
-                                            maxAge: (Math.random() - 0.5) * 3 + animal.maxAge, // small mutation?
                                         };
                                         cells.current[adjI][adjJ] = {
                                             animal: newAnimal,

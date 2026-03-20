@@ -11,7 +11,6 @@ export const appRouter = router({
                 name: z.string().min(1),
                 author: z.string().min(1),
                 color: colorSchema,
-                maxAge: z.number().gt(0),
                 script: z.string().min(1),
             }),
         )
