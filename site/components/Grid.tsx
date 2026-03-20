@@ -18,7 +18,6 @@ import { Spinner } from "@/components/ui/spinner";
 
 export default function Grid({ cellSize = 3 }) {
     const [loading, setLoading] = useState(true);
-    console.log(loading);
     const [hoveredCell, setHoveredCell] = useState<Animal | null>(null);
 
     const GRID = 50;
@@ -94,7 +93,7 @@ export default function Grid({ cellSize = 3 }) {
             const jsRawScript = ts.transpileModule(currentAnimal.script, {
                 compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.None },
             }).outputText;
-            baseSpeciesRef.current.push({ ...currentAnimal, energy: 0, age: 0, script: jsRawScript });
+            baseSpeciesRef.current.push({ ...currentAnimal, energy: 0, age: 0, script: jsRawScript, lastAction: null });
         }
         cells.current = initCells(baseSpeciesRef.current);
     }, [dbAnimals]);
@@ -103,8 +102,8 @@ export default function Grid({ cellSize = 3 }) {
     useEffect(() => {
         let rafId: number;
         let lastTime = 0;
-        const MS_PER_TICK = 1000;
         let numTicks = 0;
+        const msPerTick = 2500;
         const sleepingAnimals = new WeakMap<object, number>();
 
         const tick = (timestamp: number) => {
@@ -113,7 +112,7 @@ export default function Grid({ cellSize = 3 }) {
                 return;
             }
             const animalPerformedActionThisTick = new Set();
-            if (timestamp - lastTime >= MS_PER_TICK) {
+            if (timestamp - lastTime >= msPerTick) {
                 numTicks++;
                 lastTime = timestamp;
 
@@ -179,6 +178,9 @@ export default function Grid({ cellSize = 3 }) {
                             }
 
                             if (direction && animal.energy >= MOVEMENT_COST + animal.age * 0.01) {
+                                animal.lastAction = {
+                                    move: direction,
+                                };
                                 animal.energy -= MOVEMENT_COST + animal.age * 0.01;
                                 let { adjI, adjJ } = getAdjIndexes(direction, i, j);
 
@@ -193,6 +195,9 @@ export default function Grid({ cellSize = 3 }) {
                                     };
                                 }
                             } else if (eat) {
+                                animal.lastAction = {
+                                    eat: true,
+                                };
                                 const currentCellFood = cells.current[i][j].food;
                                 if (currentCellFood != null) {
                                     animal.energy += currentCellFood.value * 5; // food is (0,1)
@@ -202,22 +207,31 @@ export default function Grid({ cellSize = 3 }) {
                                     };
                                 }
                             } else if (sleep) {
+                                animal.lastAction = {
+                                    sleep: true,
+                                };
                                 sleepingAnimals.set(animal, 1);
                                 animal.energy += SLEEPING_BONUS;
                             } else if (predate) {
+                                animal.lastAction = {
+                                    predate: true,
+                                };
                                 const dirs = getRandomDirections();
                                 for (const dir of dirs) {
                                     let { adjI, adjJ } = getAdjIndexes(dir, i, j);
                                     if (contains(adjI, adjJ, GRID) && cells.current[adjI][adjJ].animal) {
                                         const preyEnergy = cells.current[adjI][adjJ].animal?.energy;
                                         if (preyEnergy != undefined) {
-                                            // not sure about value here, my intuition is that 0.1 would give
-                                            // 10 energy max, which seems fine
-                                            animal.energy += preyEnergy * 0.1;
+                                            // splitting this energy for the immediate killer
+                                            // but also allowing some scavenging later!
+                                            animal.energy += preyEnergy * 0.005;
                                         }
                                         cells.current[adjI][adjJ] = {
                                             animal: cell.animal,
-                                            food: cells.current[adjI][adjJ].food,
+                                            food: !cells.current[adjI][adjJ].food
+                                                ? null
+                                                : // scavenge
+                                                  { value: cells.current[adjI][adjJ].food.value + preyEnergy * 0.005 },
                                         };
                                         cells.current[i][j] = {
                                             animal: null,
@@ -227,6 +241,9 @@ export default function Grid({ cellSize = 3 }) {
                                     }
                                 }
                             } else if (reproduce && animal.energy >= REPRODUCTION_COST) {
+                                animal.lastAction = {
+                                    reproduce: true,
+                                };
                                 const dirs = getRandomDirections();
                                 for (const dir of dirs) {
                                     let { adjI, adjJ } = getAdjIndexes(dir, i, j);

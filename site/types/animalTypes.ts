@@ -7,6 +7,7 @@ export type Animal = {
     energy: number;
     script: string;
     maxAge: number;
+    lastAction: AnimalAction | null;
 };
 
 export type AnimalState = {
